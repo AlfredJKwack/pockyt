@@ -123,8 +123,9 @@ class Client(object):
             "state": self._args.state,
             "sort": self._args.sort,
             "detailType": "complete",
+            "total": "1",
+            "count": min(self._args.count, 30) if self._args.count != -1 else 30  # Max 30 per page            
         }
-
         if self._args.content != "all":
             payload["contentType"] = self._args.content
 
@@ -154,21 +155,48 @@ class Client(object):
         self._payload = payload
         self._api_endpoint = API.RETRIEVE_URL
 
-        self._api_request()
+        offset = 0
+        all_items = []
 
-        items = self._response.data.get("list", {})
+        while True:
+            # Update offset for each paginated request
+            payload["offset"] = offset
 
-        if len(items) == 0:
-            print("No items found !")
+            # Make the API request
+            self._payload = payload
+            self._api_request()
+
+            # Extract items from response
+            items = self._response.data.get("list", {})
+            
+            if len(items) == 0:
+                # No items on this page, exit loop if empty
+                break
+
+            # Process and add current page of items to all_items
+            all_items.extend([{
+                "id": item.get("item_id"),
+                "title": item.get("resolved_title"),
+                "link": item.get("resolved_url"),
+                "excerpt": item.get("excerpt"),
+                "tags": self._process_tags(item.get("tags")),
+            } for item in items.values()])
+
+            # Check pagination criteria
+            total = int(self._response.data.get("total", 0))  # Convert total to int
+            if offset + payload["count"] >= total:
+                # No more pages
+                break
+
+            # Update offset for next request
+            offset += payload["count"]
+
+        # Final output collection
+        self._output = tuple(all_items)
+
+        if not all_items:
+            print("No items found!")
             sys.exit(0)
-
-        self._output = tuple({
-            "id": item.get("item_id"),
-            "title": item.get("resolved_title"),
-            "link": item.get("resolved_url"),
-            "excerpt": item.get("excerpt"),
-            "tags": self._process_tags(item.get("tags")),
-        } for item in items.values())
 
     def _process_tags(self, tags):
         if tags:
