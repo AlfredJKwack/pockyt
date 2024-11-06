@@ -125,7 +125,6 @@ class Client(object):
             "detailType": "complete",
             "total": "1",            
         }
-        print(payload)
         if self._args.content != "all":
             payload["contentType"] = self._args.content
 
