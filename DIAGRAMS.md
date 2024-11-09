@@ -1,4 +1,4 @@
-Documentation
+Pockyt Interaction Diagrams
 -------------
 
 ### reg
