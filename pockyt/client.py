@@ -123,13 +123,10 @@ class Client(object):
             "state": self._args.state,
             "sort": self._args.sort,
             "detailType": "complete",
+            "total": "1",            
         }
-
         if self._args.content != "all":
             payload["contentType"] = self._args.content
-
-        if self._args.count != -1:
-            payload["count"] = self._args.count
 
         if self._args.query:
             payload["search"] = self._args.query
@@ -154,21 +151,57 @@ class Client(object):
         self._payload = payload
         self._api_endpoint = API.RETRIEVE_URL
 
-        self._api_request()
+        # Set up pagination controls
+        offset = 0
+        count = self._args.count if self._args.count != -1 else None
+        page_limit = 30  # API returns a maximum of 30 items per request
+        all_items = []
 
-        items = self._response.data.get("list", {})
+        while True:
+            # Adjust count for each request: request either page_limit or remaining items
+            current_count = min(page_limit, count - len(all_items)) if count else page_limit
+            payload["count"] = current_count
+            payload["offset"] = offset
 
-        if len(items) == 0:
-            print("No items found !")
+            # Make the API request
+            self._payload = payload
+            self._api_request()
+
+            # Extract items from response
+            items = self._response.data.get("list", {})
+            
+            if len(items) == 0:
+                # No items on this page, exit loop if empty
+                break
+
+            # Process and add current page of items to all_items
+            all_items.extend([{
+                "id": item.get("item_id"),
+                "title": item.get("resolved_title"),
+                "link": item.get("resolved_url"),
+                "excerpt": item.get("excerpt"),
+                "tags": self._process_tags(item.get("tags")),
+            } for item in items.values()])
+
+            # Check if enough items have been retrieved
+            if count and len(all_items) >= count:
+                all_items = all_items[:count]  # Trim to requested count
+                break
+
+            # Check if there are more pages available (pagination condition)
+            total = int(self._response.data.get("total", 0))
+            if offset + current_count >= total:
+                break
+
+            # Update offset for next request
+            offset += current_count
+
+        # Final output collection
+        self._output = tuple(all_items)
+
+        if not all_items:
+            print("No items found!")
             sys.exit(0)
-
-        self._output = tuple({
-            "id": item.get("item_id"),
-            "title": item.get("resolved_title"),
-            "link": item.get("resolved_url"),
-            "excerpt": item.get("excerpt"),
-            "tags": self._process_tags(item.get("tags")),
-        } for item in items.values())
 
     def _process_tags(self, tags):
         if tags:
