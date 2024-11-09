@@ -9,6 +9,7 @@ __pycache__/
 .venv/
 env/
 venv/
+venv-pockyt/
 build/
 develop-eggs/
 dist/
@@ -19,6 +20,7 @@ parts/
 sdist/
 var/
 *.egg-info/
+appmap.*
 
 # Environment
 Pipfile.lock
