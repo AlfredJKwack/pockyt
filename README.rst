@@ -162,7 +162,8 @@ Documentation
                         restrict items to domain : <domain> : {None}
   -f <specifier>, --format <specifier>
                         format output : <specifier> : {'{id} | {title} |
-                        {link}', [id, title, link, excerpt, tags]}
+                        {link}', [id, title, link, excerpt, tags, 
+                        time_added, time_updated, domain]}
   -o <option>, --output <option>
                         redirect output : <option> : {None, [browser,
                         filename]}
@@ -170,6 +171,9 @@ Documentation
                         save offline copies : <path> : path/to/archive/folder
   --since <YYYY-MM-DD>
                         only return items modified since : <YYYY-MM-DD>
+  -json, --json
+                        output results in JSON format. 
+                        overrides --format option
 
 **pockyt put -h** :
 

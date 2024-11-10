@@ -112,7 +112,7 @@ class Pockyt(object):
             metavar="<specifier>",
             default="{id} | {title} | {link}",
             help="format output : <specifier> : {'{id} | {title} | {link}', "
-            "[id, title, link, excerpt, tags]}",
+            "[id, title, link, excerpt, tags, time_added, time_updated, domain]}",
         )
         get_parser.add_argument(
             "-o",
@@ -131,6 +131,13 @@ class Pockyt(object):
             "--since",
             metavar="<YYYY-MM-DD>",
             help="only return items modified since : <YYYY-MM-DD>",
+        )
+
+        get_parser.add_argument(
+            "-json",
+            "--output-json",
+            action="store_true",
+            help="output results in JSON format",
         )
 
         # add items to collection

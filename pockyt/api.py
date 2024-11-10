@@ -28,7 +28,7 @@ class API(object):
 
     CONTENT_TYPE = "application/json"
 
-    INFO_KEYS = ["id", "title", "link", "excerpt", "tags"]
+    INFO_KEYS = ["id", "title", "link", "excerpt", "tags", "time_added", "time_updated", "domain"]
 
     @classmethod
     def get_auth_user_url(cls, rt):

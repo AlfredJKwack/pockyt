@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals, with_s
 
 import sys
 import time
+import json
 from datetime import datetime
 from os.path import join
 
@@ -38,16 +39,22 @@ class Client(object):
 
     def _output_to_file(self):
         file_path = FileSystem.resolve_path(self._args.output)
-        content = "".join(
-            map(lambda info: self._format_spec.format(**info), self._output))
+        if self._args.output_json:
+            content = json.dumps(self._output, indent=4, sort_keys=True)
+        else:        
+            content = "".join(
+                map(lambda info: self._format_spec.format(**info), self._output))
         FileSystem.write_to_file(file_path, content)
 
     def _print_to_console(self, info):
-        line = self._format_spec.format(**info)
-        try:
-            print(line, end="")
-        except UnicodeEncodeError:
-            print(line.encode(API.ENCODING), end="")
+        if self._args.output_json:
+            print(json.dumps(info, indent=4, sort_keys=True))
+        else:
+            line = self._format_spec.format(**info)
+            try:
+                print(line, end="")
+            except UnicodeEncodeError:
+                print(line.encode(API.ENCODING), end="")
 
     def _open_in_browser(self, info):
         time.sleep(1)
@@ -181,6 +188,9 @@ class Client(object):
                 "link": item.get("resolved_url"),
                 "excerpt": item.get("excerpt"),
                 "tags": self._process_tags(item.get("tags")),
+                "time_added": item.get("time_added"),
+                "time_updated": item.get("time_updated"),
+                "domain": item.get("domain_metadata", {}).get("name"),
             } for item in items.values()])
 
             # Check if enough items have been retrieved
@@ -205,7 +215,7 @@ class Client(object):
 
     def _process_tags(self, tags):
         if tags:
-            return tags.keys()
+            return list(tags.keys())
 
     def _put(self):
         payload = {
